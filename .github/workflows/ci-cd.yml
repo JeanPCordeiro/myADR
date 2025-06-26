@@ -138,8 +138,11 @@ jobs:
         npm ci
         echo "Serverless"
         serverless -v
-        serverless deploy --stage production
-        
+        serverless deploy --verbose --stage production
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4         
+
     - name: Build and deploy frontend to production
       working-directory: ./frontend
       run: |
