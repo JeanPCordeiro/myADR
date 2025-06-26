@@ -1,0 +1,23 @@
+@startuml
+!include C4_Context.puml
+
+TITLE Application de Gestion des ADR - Diagramme de Contexte du Système
+
+Person(contributor, "Contributeur ADR", "Crée et modifie les ADR")
+Person(approver, "Approbateur ADR", "Réviser, accepter ou rejeter les ADR")
+Person(reader, "Lecteur ADR", "Consulte les ADR")
+Person(admin, "Administrateur", "Gère les utilisateurs, produits et solutions")
+
+System(adr_app, "Application de Gestion des ADR", "Permet la gestion des Architecture Decision Records")
+
+System_Ext(vcs, "Système de Gestion de Versions", "Stocke les ADR (ex: Git)")
+
+Rel(contributor, adr_app, "Crée/Modifie ADR via")
+Rel(approver, adr_app, "Approuve/Rejette ADR via")
+Rel(reader, adr_app, "Consulte ADR via")
+Rel(admin, adr_app, "Administre via")
+Rel(adr_app, vcs, "Lit et Écrit ADRs dans")
+
+@enduml
+
+

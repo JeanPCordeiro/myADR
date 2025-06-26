@@ -1,0 +1,38 @@
+@startuml
+!include C4_Context.puml
+!include C4_Container.puml
+!include C4_Component.puml
+
+TITLE Application de Gestion des ADR - Diagramme de Composants (API REST)
+
+Container(api, "API REST", "Node.js, Express", "Fournit les services de gestion des ADR")
+Container(database, "Base de Données", "DynamoDB", "Stocke les métadonnées des ADR et les informations utilisateurs")
+Container(adr_storage, "Stockage ADR", "S3", "Stocke les fichiers ADR bruts (MADR, PlantUML)")
+System_Ext(vcs, "Système de Gestion de Versions", "Stocke les ADR (ex: Git)")
+
+Container_Boundary(api, "API REST") {
+    Component(adr_controller, "ADR Controller", "Node.js", "Gère les requêtes HTTP pour les ADR")
+    Component(user_controller, "User Controller", "Node.js", "Gère les requêtes HTTP pour les utilisateurs")
+    Component(auth_service, "Auth Service", "Node.js", "Gère l'authentification et l'autorisation")
+    Component(adr_service, "ADR Service", "Node.js", "Logique métier pour les ADR")
+    Component(user_service, "User Service", "Node.js", "Logique métier pour les utilisateurs")
+    Component(vcs_adapter, "VCS Adapter", "Node.js", "Adapteur pour interagir avec le système de gestion de versions")
+    Component(db_adapter, "DB Adapter", "Node.js", "Adapteur pour interagir avec la base de données")
+    Component(storage_adapter, "Storage Adapter", "Node.js", "Adapteur pour interagir avec le stockage S3")
+}
+
+Rel(adr_controller, adr_service, "Utilise")
+Rel(user_controller, user_service, "Utilise")
+Rel(adr_controller, auth_service, "Vérifie l'autorisation via")
+Rel(user_controller, auth_service, "Vérifie l'autorisation via")
+Rel(adr_service, db_adapter, "Accède aux données via")
+Rel(user_service, db_adapter, "Accède aux données via")
+Rel(adr_service, storage_adapter, "Gère les fichiers via")
+Rel(adr_service, vcs_adapter, "Synchronise via")
+Rel(db_adapter, database, "Communique avec")
+Rel(storage_adapter, adr_storage, "Communique avec")
+Rel(vcs_adapter, vcs, "Communique avec")
+
+@enduml
+
+

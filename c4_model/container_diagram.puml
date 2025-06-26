@@ -1,0 +1,32 @@
+@startuml
+!include C4_Context.puml
+!include C4_Container.puml
+
+TITLE Application de Gestion des ADR - Diagramme de Conteneurs
+
+Person(contributor, "Contributeur ADR", "Crée et modifie les ADR")
+Person(approver, "Approbateur ADR", "Réviser, accepter ou rejeter les ADR")
+Person(reader, "Lecteur ADR", "Consulte les ADR")
+Person(admin, "Administrateur", "Gère les utilisateurs, produits et solutions")
+
+System_Ext(vcs, "Système de Gestion de Versions", "Stocke les ADR (ex: Git)")
+
+Container_Boundary(adr_app, "Application de Gestion des ADR") {
+    Container(web_app, "Application Web", "Node.js, React", "Permet aux utilisateurs d'interagir avec les ADR")
+    Container(api, "API REST", "Node.js, Express", "Fournit les services de gestion des ADR")
+    Container(database, "Base de Données", "DynamoDB", "Stocke les métadonnées des ADR et les informations utilisateurs")
+    Container(adr_storage, "Stockage ADR", "S3", "Stocke les fichiers ADR bruts (MADR, PlantUML)")
+}
+
+Rel(contributor, web_app, "Utilise")
+Rel(approver, web_app, "Utilise")
+Rel(reader, web_app, "Utilise")
+Rel(admin, web_app, "Utilise")
+Rel(web_app, api, "Appelle les services de")
+Rel(api, database, "Lit et Écrit")
+Rel(api, adr_storage, "Lit et Écrit les fichiers")
+Rel(api, vcs, "Synchronise les ADR avec")
+
+@enduml
+
+
