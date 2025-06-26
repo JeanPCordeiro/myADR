@@ -135,7 +135,7 @@ jobs:
     - name: Deploy backend to production
       working-directory: ./backend
       run: |
-        npm ci
+        npm install
         serverless deploy --stage production
         
     - name: Build and deploy frontend to production
