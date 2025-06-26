@@ -138,6 +138,7 @@ jobs:
         npm ci
         echo "Serverless"
         serverless -v
+        serverless plugin install -n serverless-offline
         serverless deploy --verbose --stage production
 
     - name: Setup pnpm
