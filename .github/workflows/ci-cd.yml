@@ -130,7 +130,7 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
         
     - name: Install Serverless Framework
-      run: npm install -g serverless
+      run: npm install -g serverless@3.40.0
       
     - name: Deploy backend to production
       working-directory: ./backend
