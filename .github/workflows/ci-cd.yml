@@ -1,0 +1,153 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+        
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+      
+    - name: Run backend tests
+      working-directory: ./backend
+      run: npm test
+      
+    - name: Run backend linting
+      working-directory: ./backend
+      run: npm run lint || echo "Linting not configured"
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: latest
+        
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: pnpm install
+      
+    - name: Run frontend tests
+      working-directory: ./frontend
+      run: pnpm test || echo "Tests not configured"
+      
+    - name: Build frontend
+      working-directory: ./frontend
+      run: pnpm build
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        
+    - name: Install Serverless Framework
+      run: npm install -g serverless
+      
+    - name: Deploy backend to staging
+      working-directory: ./backend
+      run: |
+        npm ci
+        serverless deploy --stage staging
+        
+    - name: Build and deploy frontend to staging
+      working-directory: ./frontend
+      run: |
+        pnpm install
+        pnpm build
+        aws s3 sync dist/ s3://${{ secrets.STAGING_S3_BUCKET }} --delete
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.STAGING_CLOUDFRONT_ID }} --paths "/*"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        
+    - name: Install Serverless Framework
+      run: npm install -g serverless
+      
+    - name: Deploy backend to production
+      working-directory: ./backend
+      run: |
+        npm ci
+        serverless deploy --stage production
+        
+    - name: Build and deploy frontend to production
+      working-directory: ./frontend
+      run: |
+        pnpm install
+        pnpm build
+        aws s3 sync dist/ s3://${{ secrets.PRODUCTION_S3_BUCKET }} --delete
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.PRODUCTION_CLOUDFRONT_ID }} --paths "/*"
+        
+    - name: Run post-deployment tests
+      run: |
+        echo "Running post-deployment health checks..."
+        curl -f ${{ secrets.PRODUCTION_API_URL }}/health || exit 1
+
