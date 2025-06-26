@@ -135,7 +135,9 @@ jobs:
     - name: Deploy backend to production
       working-directory: ./backend
       run: |
+        npm cache clean --force
         npm install
+        echo "Serverless"
         serverless deploy --stage production
         
     - name: Build and deploy frontend to production
