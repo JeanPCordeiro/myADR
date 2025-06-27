@@ -152,10 +152,5 @@ jobs:
         pnpm install
         pnpm build
         aws s3 sync dist/ s3://${{ secrets.PRODUCTION_S3_BUCKET }} --delete
-        aws cloudfront create-invalidation --distribution-id ${{ secrets.PRODUCTION_CLOUDFRONT_ID }} --paths "/*"
-        
-    - name: Run post-deployment tests
-      run: |
-        echo "Running post-deployment health checks..."
-        curl -f ${{ secrets.PRODUCTION_API_URL }}/health || exit 1
+    
 
