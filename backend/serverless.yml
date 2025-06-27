@@ -14,7 +14,7 @@ provider:
     NODE_ENV: ${self:provider.stage}
     ADR_TABLE_NAME: ${self:service}-${self:provider.stage}-adrs
     USER_TABLE_NAME: ${self:service}-${self:provider.stage}-users
-    S3_BUCKET_NAME: ${self:service}-${self:provider.stage}-storage
+    S3_BUCKET_NAME: ${self:service}-${self:provider.stage}-store
     
   iam:
     role:
